@@ -1,0 +1,9 @@
+-r requirements.txt
+pytest>=8.3
+pytest-cov>=6.0
+ruff>=0.9
+mypy>=1.14
+jupyterlab>=4.3
+ipykernel>=6.29
+pre-commit>=4.0
+httpx>=0.28
