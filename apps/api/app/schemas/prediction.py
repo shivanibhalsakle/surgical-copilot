@@ -1,24 +1,24 @@
 from pydantic import BaseModel, Field
 
 
-class PreoperativePatient(BaseModel):
-    age_group: int = Field(ge=18, le=90)
+class SurgicalPatientInput(BaseModel):
+    age: int = Field(ge=18, le=120)
     sex: str
-    asa_class: int = Field(ge=1, le=6)
-    anesthesia_type: str
-    procedure_code: str
-    department: str | None = None
-    emergency_operation: bool | None = None
-    preoperative_hemoglobin: float | None = None
-    preoperative_creatinine: float | None = None
-    preoperative_albumin: float | None = None
+    weight: float = Field(gt=0)
+    height: float = Field(gt=0)
+    race: str
+    asa: int = Field(ge=1, le=5)
+    emop: int = Field(ge=0, le=1)
+    department: str
+    antype: str
+    icd10_pcs: str
 
 
-class SurgicalRiskResponse(BaseModel):
-    icu_admission_probability: float | None
-    in_hospital_mortality_probability: float | None
-    predicted_hospital_los_days: float | None
-    predicted_icu_los_days: float | None
-    resource_intensity: str
-    explanation: list[str]
+class SurgicalPredictionResponse(BaseModel):
+    icu_admission_probability: float
+    icu_admission_prediction: bool
+    risk_category: str
+    predicted_length_of_stay_days: float
+    mortality_probability: float
+    mortality_high_risk: bool
     disclaimer: str
