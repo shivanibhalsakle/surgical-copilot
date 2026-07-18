@@ -1,7 +1,8 @@
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import joblib
-import numpy as np
 import pandas as pd
 
 from apps.api.app.schemas.prediction import SurgicalPatientInput
@@ -10,118 +11,131 @@ from apps.api.app.schemas.prediction import SurgicalPatientInput
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 MODEL_DIR = PROJECT_ROOT / "models"
 
-icu_model = joblib.load(
-    MODEL_DIR / "icu_admission_model.joblib"
-)
 
-los_model = joblib.load(
-    MODEL_DIR / "length_of_stay_model.joblib"
-)
+@dataclass
+class ModelArtifacts:
+    icu_pipeline: Any
+    mortality_pipeline: Any
+    recovery_pipeline: Any
 
-mortality_model = joblib.load(
-    MODEL_DIR / "mortality_model.joblib"
-)
 
-scaler = joblib.load(
-    MODEL_DIR / "scaler.joblib"
-)
+def load_model_artifacts() -> ModelArtifacts:
+    model_paths = {
+        "icu": MODEL_DIR / "icu_pipeline.joblib",
+        "mortality": MODEL_DIR / "mortality_pipeline.joblib",
+        "recovery": MODEL_DIR / "recovery_pipeline.joblib",
+    }
 
-icu_feature_columns = joblib.load(
-    MODEL_DIR / "icu_feature_columns.joblib"
-)
+    missing_files = [
+        str(path)
+        for path in model_paths.values()
+        if not path.exists()
+    ]
 
-extended_feature_columns = joblib.load(
-    MODEL_DIR / "extended_feature_columns.joblib"
-)
+    if missing_files:
+        raise FileNotFoundError(
+            "Missing model files:\n"
+            + "\n".join(missing_files)
+        )
 
-NUMERIC_COLUMNS = ["age", "bmi", "asa"]
+    return ModelArtifacts(
+        icu_pipeline=joblib.load(model_paths["icu"]),
+        mortality_pipeline=joblib.load(
+            model_paths["mortality"]
+        ),
+        recovery_pipeline=joblib.load(
+            model_paths["recovery"]
+        ),
+    )
 
 
 def get_risk_category(probability: float) -> str:
     if probability < 0.30:
         return "Low"
+
     if probability < 0.70:
         return "Medium"
+
     return "High"
 
 
 def prepare_input(
     patient: SurgicalPatientInput,
-    expected_columns: list[str],
 ) -> pd.DataFrame:
-    bmi = patient.weight / ((patient.height / 100) ** 2)
+    patient_data = patient.model_dump()
 
-    row = pd.DataFrame(
-        [
-            {
-                "age": patient.age,
-                "sex": patient.sex,
-                "race": patient.race,
-                "asa": patient.asa,
-                "emop": patient.emop,
-                "department": patient.department,
-                "antype": patient.antype,
-                "icd10_pcs": patient.icd10_pcs,
-                "bmi": bmi,
-            }
-        ]
+    patient_data["bmi"] = (
+        patient.weight
+        / ((patient.height / 100) ** 2)
     )
 
-    row = pd.get_dummies(
-        row,
-        columns=[
-            "sex",
-            "race",
-            "department",
-            "antype",
-            "icd10_pcs",
-        ],
-        dtype=int,
-    )
+    expected_columns = [
+        "age",
+        "sex",
+        "height",
+        "weight",
+        "race",
+        "asa",
+        "department",
+        "antype",
+        "emop",
+        "icd10_pcs",
+        "bmi",
+        "heart_rate",
+        "systolic_bp",
+        "diastolic_bp",
+        "respiratory_rate",
+        "oxygen_saturation",
+        "temperature",
+        "hemoglobin",
+        "wbc",
+        "platelets",
+        "creatinine",
+        "glucose",
+        "sodium",
+        "potassium",
+        "albumin",
+        "inr",
+        "diabetes",
+        "hypertension",
+        "ckd",
+        "stroke",
+        "heart_failure",
+        "copd",
+        "cancer",
+    ]
 
-    row = row.reindex(
+    return pd.DataFrame(
+        [patient_data],
         columns=expected_columns,
-        fill_value=0,
     )
-
-    return row
 
 
 def make_predictions(
     patient: SurgicalPatientInput,
+    artifacts: ModelArtifacts,
 ) -> dict[str, object]:
-    icu_input = prepare_input(
-        patient,
-        icu_feature_columns,
-    )
-
-    extended_input = prepare_input(
-        patient,
-        extended_feature_columns,
-    )
-
-    icu_input[NUMERIC_COLUMNS] = scaler.transform(
-        icu_input[NUMERIC_COLUMNS]
-    )
+    model_input = prepare_input(patient)
 
     icu_probability = float(
-        icu_model.predict_proba(icu_input)[0, 1]
-    )
-
-    los_log_prediction = float(
-        los_model.predict(extended_input)[0]
-    )
-
-    los_days = max(
-        0.0,
-        float(np.expm1(los_log_prediction)),
+        artifacts.icu_pipeline.predict_proba(
+            model_input
+        )[0, 1]
     )
 
     mortality_probability = float(
-        mortality_model.predict_proba(
-            extended_input
+        artifacts.mortality_pipeline.predict_proba(
+            model_input
         )[0, 1]
     )
+
+    recovery_days = float(
+        artifacts.recovery_pipeline.predict(
+            model_input
+        )[0]
+    )
+
+    recovery_days = max(0.0, recovery_days)
 
     return {
         "icu_admission_probability": round(
@@ -135,7 +149,7 @@ def make_predictions(
             icu_probability
         ),
         "predicted_length_of_stay_days": round(
-            los_days,
+            recovery_days,
             1,
         ),
         "mortality_probability": round(
