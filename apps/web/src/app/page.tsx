@@ -137,6 +137,250 @@ const healthyValues = {
   inr: "1",
 } satisfies Partial<SurgicalFormState>;
 
+function getRiskLevel(probability: number) {
+  if (probability < 30) {
+    return {
+      label: "Low Risk",
+      badge: "bg-green-100 text-green-700",
+      bar: "bg-green-500",
+    };
+  }
+
+  if (probability < 70) {
+    return {
+      label: "Moderate Risk",
+      badge: "bg-yellow-100 text-yellow-700",
+      bar: "bg-yellow-500",
+    };
+  }
+
+  return {
+    label: "High Risk",
+    badge: "bg-red-100 text-red-700",
+    bar: "bg-red-500",
+  };
+}
+
+type RiskCardProps = {
+  title: string;
+  value: number;
+  description: string;
+};
+
+function RiskCard({
+  title,
+  value,
+  description,
+}: RiskCardProps) {
+  const risk = getRiskLevel(value);
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 className="text-lg font-semibold text-slate-800">
+        {title}
+      </h3>
+
+      <div className="mt-5 text-4xl font-bold text-slate-900">
+        {value.toFixed(1)}%
+      </div>
+
+      <div
+        className={`mt-3 inline-flex rounded-full px-3 py-1 text-sm font-medium ${risk.badge}`}
+      >
+        {risk.label}
+      </div>
+
+      <div className="mt-5 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+        <div
+          className={`h-full ${risk.bar} transition-all duration-700`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+
+      <p className="mt-4 text-sm text-slate-500">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+type RecoveryCardProps = {
+  days: number;
+};
+
+function RecoveryCard({
+  days,
+}: RecoveryCardProps) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h3 className="text-lg font-semibold text-slate-800">
+        Expected Recovery
+      </h3>
+
+      <div className="mt-5 text-4xl font-bold text-slate-900">
+        {Math.round(days)} Days
+      </div>
+
+      <p className="mt-4 text-sm text-slate-500">
+        Estimated post-operative recovery duration based on
+        patients with similar clinical characteristics.
+      </p>
+    </div>
+  );
+}
+
+const healthySample = {
+  name: "Healthy Sample",
+  age: "32",
+  sex: "M",
+  height: "175",
+  weight: "72",
+  race: "Asian",
+
+  asa: "1",
+  department: "General Surgery",
+  antype: "General",
+  emop: 0,
+  icd10_pcs: "08DJ3",
+
+  heart_rate: "72",
+  systolic_bp: "120",
+  diastolic_bp: "80",
+  respiratory_rate: "16",
+  oxygen_saturation: "98",
+  temperature: "36.8",
+
+  hemoglobin: "14",
+  wbc: "7",
+  platelets: "250",
+  creatinine: "0.9",
+  glucose: "90",
+  sodium: "140",
+  potassium: "4.2",
+  albumin: "4.2",
+  inr: "1.0",
+
+  diabetes: 0,
+  hypertension: 0,
+  ckd: 0,
+  stroke: 0,
+  heart_failure: 0,
+  copd: 0,
+  cancer: 0,
+};
+
+const moderateRiskSample = {
+  name: "Moderate Risk Sample",
+  age: "64",
+  sex: "F",
+  height: "160",
+  weight: "78",
+  race: "Asian",
+
+  asa: "3",
+  department: "General Surgery",
+  antype: "General",
+  emop: 0,
+  icd10_pcs: "08DJ3",
+
+  heart_rate: "88",
+  systolic_bp: "142",
+  diastolic_bp: "86",
+  respiratory_rate: "18",
+  oxygen_saturation: "96",
+  temperature: "37.1",
+
+  hemoglobin: "11.2",
+  wbc: "9.5",
+  platelets: "210",
+  creatinine: "1.3",
+  glucose: "135",
+  sodium: "137",
+  potassium: "4.6",
+  albumin: "3.4",
+  inr: "1.1",
+
+  diabetes: 1,
+  hypertension: 1,
+  ckd: 0,
+  stroke: 0,
+  heart_failure: 0,
+  copd: 0,
+  cancer: 0,
+};
+
+const highRiskSample = {
+  name: "High Risk Sample",
+  age: "79",
+  sex: "M",
+  height: "168",
+  weight: "68",
+  race: "Asian",
+
+  asa: "4",
+  department: "General Surgery",
+  antype: "General",
+  emop: 1,
+  icd10_pcs: "08DJ3",
+
+  heart_rate: "112",
+  systolic_bp: "94",
+  diastolic_bp: "58",
+  respiratory_rate: "24",
+  oxygen_saturation: "91",
+  temperature: "38.2",
+
+  hemoglobin: "8.4",
+  wbc: "16",
+  platelets: "125",
+  creatinine: "2.4",
+  glucose: "210",
+  sodium: "132",
+  potassium: "5.3",
+  albumin: "2.5",
+  inr: "1.5",
+
+  diabetes: 1,
+  hypertension: 1,
+  ckd: 1,
+  stroke: 1,
+  heart_failure: 1,
+  copd: 1,
+  cancer: 0,
+};
+
+
+
+type ProgressStepProps = {
+  label: string;
+  complete: boolean;
+};
+
+function ProgressStep({
+  label,
+  complete,
+}: ProgressStepProps) {
+  return (
+    <div
+      className={`flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${complete
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+        : "border-slate-200 bg-slate-50 text-slate-500"
+        }`}
+    >
+      <span
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${complete
+          ? "bg-emerald-600 text-white"
+          : "bg-slate-300 text-white"
+          }`}
+      >
+        {complete ? "✓" : "•"}
+      </span>
+
+      <span className="truncate">{label}</span>
+    </div>
+  );
+}
+
 export default function Home() {
   const [form, setForm] =
     useState<SurgicalFormState>(initialForm);
@@ -146,6 +390,61 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const loadSamplePatient = (sample: typeof initialForm) => {
+    setForm(sample);
+    setResult(null);
+    setError("");
+  };
+
+  const resetForm = () => {
+    setForm(initialForm);
+    setResult(null);
+    setError("");
+    setLoading(false);
+
+  };
+
+  const patientComplete =
+    form.name.trim() !== "" &&
+    form.age !== "" &&
+    form.sex !== "" &&
+    form.height !== "" &&
+    form.weight !== "" &&
+    form.race !== "";
+
+  const surgicalComplete =
+    form.asa !== "" &&
+    form.department !== "" &&
+    form.antype !== "";
+
+  const vitalsComplete =
+    form.heart_rate !== "" &&
+    form.systolic_bp !== "" &&
+    form.diastolic_bp !== "" &&
+    form.respiratory_rate !== "" &&
+    form.oxygen_saturation !== "" &&
+    form.temperature !== "";
+
+  const labsComplete =
+    form.hemoglobin !== "" &&
+    form.wbc !== "" &&
+    form.platelets !== "" &&
+    form.creatinine !== "" &&
+    form.glucose !== "" &&
+    form.sodium !== "" &&
+    form.potassium !== "" &&
+    form.albumin !== "" &&
+    form.inr !== "";
+
+  const completedSections = [
+    patientComplete,
+    surgicalComplete,
+    vitalsComplete,
+    labsComplete,
+  ].filter(Boolean).length;
+
+  const progressPercentage = (completedSections / 4) * 100;
 
   function updateField(
     field: keyof SurgicalFormState,
@@ -225,16 +524,73 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-100 px-6 py-10">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900">
-            INSPIRE Surgical Copilot
-          </h1>
+        
 
-          <p className="mt-2 text-slate-600">
-            Enter preoperative patient information to estimate
-            surgical risk.
-          </p>
-        </header>
+        <div className="sticky top-4 z-40 mb-6 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-md backdrop-blur">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            {/* Progress steps */}
+            <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
+              <ProgressStep
+                label="Patient"
+                complete={patientComplete}
+              />
+
+              <ProgressStep
+                label="Surgery"
+                complete={surgicalComplete}
+              />
+
+              <ProgressStep
+                label="Vitals"
+                complete={vitalsComplete}
+              />
+
+              <ProgressStep
+                label="Labs"
+                complete={labsComplete}
+              />
+            </div>
+
+            {/* Demo and reset controls */}
+            <div className="flex flex-wrap gap-2 xl:justify-end">
+              <button
+                type="button"
+                onClick={() => loadSamplePatient(healthySample)}
+                disabled={loading}
+                className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Healthy Adult
+              </button>
+
+              <button
+                type="button"
+                onClick={() => loadSamplePatient(moderateRiskSample)}
+                disabled={loading}
+                className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Moderate Risk
+              </button>
+
+              <button
+                type="button"
+                onClick={() => loadSamplePatient(highRiskSample)}
+                disabled={loading}
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                High Risk
+              </button>
+
+              <button
+                type="button"
+                onClick={resetForm}
+                disabled={loading}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
 
         <form
           onSubmit={handleSubmit}
@@ -252,6 +608,7 @@ export default function Home() {
               value={form.age}
               onChange={(value) => updateField("age", value)}
             />
+
 
             <SelectInput
               label="Sex"
@@ -460,54 +817,28 @@ export default function Home() {
         )}
 
         {result && (
-          <section className="mt-8 rounded-xl bg-white p-6 shadow">
-            <h2 className="text-2xl font-bold text-slate-900">
-              Prediction results
+          <section className="mt-10">
+            <h2 className="mb-6 text-2xl font-bold text-slate-800">
+              Assess Risks
             </h2>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
-              <ResultCard
-                label="Risk category"
-                value={result.risk_category}
+            <div className="grid gap-6 md:grid-cols-3">
+              <RiskCard
+                title="ICU Admission Risk"
+                value={result.icu_admission_probability}
+                description="Estimated probability that the patient will require ICU care following surgery."
               />
 
-              <ResultCard
-                label="ICU admission probability"
-                value={`${(
-                  result.icu_admission_probability * 100
-                ).toFixed(1)}%`}
+              <RiskCard
+                title="In-Hospital Mortality Risk"
+                value={result.mortality_probability}
+                description="Estimated probability of in-hospital mortality following surgery."
               />
 
-              <ResultCard
-                label="Predicted length of stay"
-                value={`${result.predicted_length_of_stay_days.toFixed(
-                  1,
-                )} days`}
-              />
-
-              <ResultCard
-                label="Mortality probability"
-                value={`${(
-                  result.mortality_probability * 100
-                ).toFixed(1)}%`}
-              />
-
-              <ResultCard
-                label="ICU admission prediction"
-                value={
-                  result.icu_admission_prediction ? "Yes" : "No"
-                }
-              />
-
-              <ResultCard
-                label="High mortality risk"
-                value={result.mortality_high_risk ? "Yes" : "No"}
+              <RecoveryCard
+                days={result.predicted_length_of_stay_days}
               />
             </div>
-
-            <p className="mt-6 text-sm text-slate-500">
-              {result.disclaimer}
-            </p>
           </section>
         )}
       </div>
