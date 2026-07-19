@@ -1,6 +1,10 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   predictSurgicalRisk,
   SurgicalPatientInput,
@@ -381,6 +385,17 @@ function ProgressStep({
   );
 }
 
+const formSections = [
+  "patient",
+  "surgery",
+  "vitals",
+  "labs",
+  "history",
+] as const;
+
+type FormSectionId =
+  (typeof formSections)[number];
+
 export default function Home() {
   const [form, setForm] =
     useState<SurgicalFormState>(initialForm);
@@ -390,6 +405,12 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [activeSection, setActiveSection] =
+    useState<FormSectionId>("patient");
+
+  const scrollContainerRef =
+    useRef<HTMLDivElement | null>(null);
 
   const loadSamplePatient = (sample: typeof initialForm) => {
     setForm(sample);
@@ -521,12 +542,14 @@ export default function Home() {
     }
   }
 
-  return (
-    <main className="min-h-screen bg-slate-100 px-6 py-10">
-      <div className="mx-auto max-w-6xl">
-        
 
-        <div className="sticky top-4 z-40 mb-6 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-md backdrop-blur">
+
+  return (
+    <main className="min-h-screen bg-white-100 px-6 py-10">
+      <div className="mx-auto max-w-6xl">
+
+
+        <div className="sticky top-4 z-40 mb-6 rounded-2xl border border-slate-200 bg-white/40 p-4 shadow-md backdrop-blur">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             {/* Progress steps */}
             <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
@@ -594,7 +617,7 @@ export default function Home() {
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-8 rounded-xl bg-white p-6 shadow"
+          className="space-y-8 rounded-xl bg-slate p-6 shadow"
         >
           <FormSection title="Patient details">
             <TextInput
@@ -855,7 +878,7 @@ function FormSection({
 }) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold text-slate-900">
+      <h2 className="mb-4 text-xl font-semibold text-blue-900">
         {title}
       </h2>
 
